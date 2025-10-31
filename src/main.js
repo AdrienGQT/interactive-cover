@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import GUI from 'lil-gui';
 
 // Debug UI
-const gui = new GUI()
+const gui = window.location.hash === "#debug" ? new GUI() : null
 
 // Texture Loader
 const textureLoader = new THREE.TextureLoader()
@@ -28,21 +28,29 @@ const cover = new THREE.Mesh(
     roughnessMap: dep_roughnessMap
   })
 )
-gui.add(cover.material, "displacementScale").min(0.01).max(3).step(0.01)
+if(gui) gui.add(cover.material, "displacementScale").min(0.01).max(3).step(0.01)
+
 scene.add(cover)
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xfff4be, 2.2)
 scene.add(ambientLight)
+
+if(gui){
 gui.addColor(ambientLight, 'color').name('AmbientLightColor')
 gui.add(ambientLight, 'intensity').min(1).max(5).step(0.1).name('AmbientLightIntensity')
+}
 
 const pointLight = new THREE.PointLight(0xccccff, 19, 100)
 pointLight.position.set(0, 0, 3.8)
 scene.add(pointLight)
+
+if(gui){
 gui.addColor(pointLight, 'color').name('PointLightColor')
 gui.add(pointLight, 'intensity').min(1).max(50).step(1).name('PointLightIntensity')
 gui.add(pointLight, 'distance').min(10).max(1000).step(10).name('PointLightDistance')
+}
+
 
 // Sizes
 const sizes = {
