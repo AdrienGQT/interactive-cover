@@ -27,3 +27,5 @@ dist-ssr
 
 public/cover/archive
 public/cover/psd
+
+.vercel

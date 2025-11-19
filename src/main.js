@@ -1,6 +1,12 @@
 import './style.css'
 import * as THREE from 'three'
+import coverVertexShader from './shaders/cover/vertex.glsl'
+import coverFragmentShader from './shaders/cover/fragment.glsl'
+import CustomShaderMaterial from 'three-custom-shader-material/vanilla'
 import GUI from 'lil-gui';
+import { gsap } from "gsap";
+
+let isCoverVisible = false;
 
 // Debug UI
 const gui = window.location.hash === "#debug" ? new GUI() : null
@@ -10,7 +16,8 @@ const textureLoader = new THREE.TextureLoader()
 const dep_colorMap = textureLoader.load('/cover/dep_colorMap.jpg')
 dep_colorMap.colorSpace = THREE.SRGBColorSpace
 const dep_depthMap = textureLoader.load('/cover/dep_depthMap11.png')
-const dep_roughnessMap = textureLoader.load('/cover/dep_roughnessMap12.png')
+const dep_roughnessMap = textureLoader.load('/cover/dep_roughnessMap.png')
+const dep_normalMap = textureLoader.load('/cover/dep_normalMap.png')
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -18,19 +25,41 @@ const canvas = document.querySelector('canvas.webgl')
 // Scene
 const scene = new THREE.Scene()
 
-// Cover
+/* Cover */
+const uniforms = {
+  uDisplacementScale : new THREE.Uniform(1.2),
+  uDisplacementMap: new THREE.Uniform(dep_depthMap),
+  uTransitionProgression: new THREE.Uniform(0.0)
+}
+
+if(gui) gui.add(uniforms.uDisplacementScale, "value").min(0.01).max(3).step(0.01).name("uDisplacementScale")
+if(gui) gui.add(uniforms.uTransitionProgression, "value").min(0.0).max(1).step(0.01).name('uTransitionProgression')
+
+
+const coverMaterial = new CustomShaderMaterial({
+  // CSM
+  baseMaterial: THREE.MeshStandardMaterial,
+  vertexShader: coverVertexShader,
+  fragmentShader: coverFragmentShader,
+  uniforms: uniforms,
+
+  // MeshStandardMateriel
+  map: dep_colorMap,
+  // displacementMap: dep_depthMap,
+  // displacementScale: uniforms.uDisplacementScale.value,
+  roughnessMap: dep_roughnessMap,
+  normalMap: dep_normalMap,
+})
+
 const cover = new THREE.Mesh(
   new THREE.PlaneGeometry(5, 5, 512, 512),
-  new THREE.MeshStandardMaterial({
-    map: dep_colorMap,
-    displacementMap: dep_depthMap,
-    displacementScale: 0.95,
-    roughnessMap: dep_roughnessMap
-  })
+  coverMaterial
 )
-if(gui) gui.add(cover.material, "displacementScale").min(0.01).max(3).step(0.01)
 
 scene.add(cover)
+
+/* Vynil */
+
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xfff4be, 2.2)
@@ -101,9 +130,47 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 // Interactivity
 
+const isMobile = /Mobi|Android/i.test(navigator.userAgent)
+
+const raycaster = new THREE.Raycaster()
+const mouseVec = new THREE.Vector2()
+
+const toggleVisibility = () => {
+  gsap.to(uniforms.uTransitionProgression, {
+    value: isCoverVisible ? 0 : 1,
+    duration: 5,
+    ease: 'power1.inOut',
+    onComplete: () => {
+      isCoverVisible = isCoverVisible ? false : true
+    }
+  })
+}
+
 window.addEventListener('mousemove', (e) => {
   mouse.targetX = ((e.clientX / sizes.width) - 0.5) * 2
   mouse.targetY = ((e.clientY / sizes.height) - 0.5) * 2
+
+  mouseVec.x = (e.clientX / sizes.width) * 2 - 1
+  mouseVec.y = (e.clientY / sizes.height) * 2 - 1
+
+  raycaster.setFromCamera(mouseVec, camera)
+  const intersects = raycaster.intersectObject(cover)
+
+  canvas.style.cursor = intersects.length > 0 ? 'pointer' : 'default'
+})
+
+window.addEventListener('click', (e) => {
+  mouseVec.x = (e.clientX / sizes.width) * 2 - 1
+  mouseVec.y = (e.clientY / sizes.height) * 2 - 1
+
+  raycaster.setFromCamera(mouseVec, camera)
+
+  const intersects = raycaster.intersectObject(cover)
+
+  if(intersects.length > 0 ){
+    toggleVisibility()
+  }
+
 })
 
 // Animate
@@ -119,8 +186,10 @@ const tick = () => {
   mouse.x += (mouse.targetX - mouse.x) * 0.1
   mouse.y += (mouse.targetY - mouse.y) * 0.1
 
-  cover.rotation.y = mouse.x / 16
-  cover.rotation.x = mouse.y / 16
+  cover.rotation.y = mouse.x / 14
+  cover.rotation.x = mouse.y / 14
+
+  // uniforms.uTransitionProgression.value = (Math.sin(elapsedTime) + 1.0) * 0.5;
 
   camera.position.x = mouse.x
   camera.position.y = -mouse.y / 1.3

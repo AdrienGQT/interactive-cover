@@ -1,14 +1,23 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>interactive-cover</title>
   </head>
   <body>
     <div id="app">
-      <canvas class="webgl"></canvas>
+      <canvas class="webgl" unselectable="on" style="-webkit-user-select:none;user-select:none;" ></canvas>
+      <span id="gyroTest">Click to reveal</span>
+      <span class="text" id="text-right">Cover by Dexter Maurer</span>
+      <span class="text" id="text-left">Developed by Adrien Gasquet</span>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
