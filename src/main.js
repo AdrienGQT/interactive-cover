@@ -7,6 +7,7 @@ import GUI from 'lil-gui';
 import { gsap } from "gsap";
 
 let isCoverVisible = false;
+let isCoverTransitionnig = false;
 
 // Debug UI
 const gui = window.location.hash === "#debug" ? new GUI() : null
@@ -27,7 +28,7 @@ const scene = new THREE.Scene()
 
 /* Cover */
 const uniforms = {
-  uDisplacementScale : new THREE.Uniform(1.2),
+  uDisplacementScale : new THREE.Uniform(1.1),
   uDisplacementMap: new THREE.Uniform(dep_depthMap),
   uTransitionProgression: new THREE.Uniform(0.0)
 }
@@ -45,10 +46,9 @@ const coverMaterial = new CustomShaderMaterial({
 
   // MeshStandardMateriel
   map: dep_colorMap,
-  // displacementMap: dep_depthMap,
-  // displacementScale: uniforms.uDisplacementScale.value,
   roughnessMap: dep_roughnessMap,
   normalMap: dep_normalMap,
+  metalness: 0.1
 })
 
 const cover = new THREE.Mesh(
@@ -58,18 +58,18 @@ const cover = new THREE.Mesh(
 
 scene.add(cover)
 
-/* Vynil */
-
-
 // Lights
-const ambientLight = new THREE.AmbientLight(0xfff4be, 2.2)
+
+// Ambient light
+const ambientLight = new THREE.AmbientLight("#fff4be", 2.2)
 scene.add(ambientLight)
 
 if(gui){
 gui.addColor(ambientLight, 'color').name('AmbientLightColor')
-gui.add(ambientLight, 'intensity').min(1).max(5).step(0.1).name('AmbientLightIntensity')
+gui.add(ambientLight, 'intensity').min(1).max(20).step(0.1).name('AmbientLightIntensity')
 }
 
+// Point light
 const pointLight = new THREE.PointLight(0xccccff, 19, 100)
 pointLight.position.set(0, 0, 3.8)
 scene.add(pointLight)
@@ -127,10 +127,50 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+renderer.setClearColor(0x05050E, 1);
+
+/* Audio */
+
+let isMusicPlaying = false;
+let isMusicFiltered = false;
+
+const music = new Audio()
+music.src = '/music/obseque.mp3'
+const musicFiltered = new Audio()
+musicFiltered.src = '/music/obseque_filtered.mp3'
+musicFiltered.volume = 0
+
+const toggleMusic = () => {
+  if(!isMusicPlaying){
+    music.play()
+    musicFiltered.play()
+    isMusicPlaying = true
+  }
+  else {
+    console.log('Music changes !')
+      gsap.to(music, {
+        volume: isMusicFiltered ? 1 : 0,
+        duration: 5,
+        ease : 'power3.inOut',
+        onUpdate: () => {
+          console.log('Music volume: ', music.volume)
+        }
+      })
+      gsap.to(musicFiltered, {
+        volume: isMusicFiltered ? 0 : 1,
+        duration: 5,
+        ease : 'power3.inOut',
+        onUpdate: () => {
+          console.log('Music filtered volume: ', musicFiltered.volume)
+        },
+        onComplete: () => {
+          isMusicFiltered = !isMusicFiltered
+        }
+      })
+  }
+}
 
 // Interactivity
-
-const isMobile = /Mobi|Android/i.test(navigator.userAgent)
 
 const raycaster = new THREE.Raycaster()
 const mouseVec = new THREE.Vector2()
@@ -140,8 +180,12 @@ const toggleVisibility = () => {
     value: isCoverVisible ? 0 : 1,
     duration: 5,
     ease: 'power1.inOut',
+    onStart: () => {
+      isCoverTransitionnig = true;
+    },
     onComplete: () => {
       isCoverVisible = isCoverVisible ? false : true
+      isCoverTransitionnig = false;
     }
   })
 }
@@ -167,8 +211,9 @@ window.addEventListener('click', (e) => {
 
   const intersects = raycaster.intersectObject(cover)
 
-  if(intersects.length > 0 ){
+  if(intersects.length > 0 && !isCoverTransitionnig){
     toggleVisibility()
+    toggleMusic()
   }
 
 })

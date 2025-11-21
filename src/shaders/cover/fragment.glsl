@@ -10,7 +10,7 @@ void main() {
     vec3 endColor = csm_DiffuseColor.rgb;
 
     // Black color
-    vec3 startColor = vec3(0.0);
+    vec3 startColor = vec3(0.001, 0.001, 0.005);
 
     // Noise color
     float noiseFactor = simplexNoise4d(vec4(
