@@ -1,36 +1,39 @@
-*
-{
-    margin: 0;
-    padding: 0;
+* {
+  margin: 0;
+  padding: 0;
 }
 
 html,
-body
-{   
-    background: #000;
-    overflow: hidden;
+body {
+  background: #000;
+  overflow: hidden;
 }
 
-.webgl
-{
-    position: fixed;
-    top: 0;
-    left: 0;
-    outline: none;
+* {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-span{
-    position: absolute;
-    color: rgb(102, 102, 102);
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 14px;
-    bottom: 8px;
+.webgl {
+  position: fixed;
+  top: 0;
+  left: 0;
+  outline: none;
 }
 
-#text-right{
-    right: 8px;
+span {
+  position: absolute;
+  color: rgb(102, 102, 102);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  bottom: 8px;
 }
 
-#text-left{
-    left: 8px;
+#text-right {
+  right: 8px;
+  text-align: right;
+}
+
+#text-left {
+  left: 8px;
 }

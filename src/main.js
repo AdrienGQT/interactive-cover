@@ -135,34 +135,33 @@ let isMusicPlaying = false;
 let isMusicFiltered = false;
 
 const music = new Audio()
-music.src = '/music/obseque.mp3'
+music.src = '/music/obseque_export.mp3'
 const musicFiltered = new Audio()
 musicFiltered.src = '/music/obseque_filtered.mp3'
 musicFiltered.volume = 0
 
 const toggleMusic = () => {
   if(!isMusicPlaying){
-    music.play()
-    musicFiltered.play()
-    isMusicPlaying = true
+    Promise.all([
+      music.play(),
+      musicFiltered.play()
+    ]).then(() => {
+      isMusicPlaying = true
+
+    }).catch(error => {
+      console.error('Audio playback failed:', error)
+    })
   }
   else {
-    console.log('Music changes !')
       gsap.to(music, {
         volume: isMusicFiltered ? 1 : 0,
         duration: 5,
         ease : 'power3.inOut',
-        onUpdate: () => {
-          console.log('Music volume: ', music.volume)
-        }
       })
       gsap.to(musicFiltered, {
         volume: isMusicFiltered ? 0 : 1,
         duration: 5,
         ease : 'power3.inOut',
-        onUpdate: () => {
-          console.log('Music filtered volume: ', musicFiltered.volume)
-        },
         onComplete: () => {
           isMusicFiltered = !isMusicFiltered
         }
